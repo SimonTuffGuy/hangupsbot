@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import time
 from time import mktime
 
-def checkpoint(bot, event, date1=time.strftime("%y/%m/%d"), hour1=time.strftime("%H"), *args):
+def checkpoint(bot, event, date1=time.strftime("%m/%d/%y"), hour1=time.strftime("%H"), *args):
     """returns the time of the next checkpoint"""
     if not bot.get_config_option('checkpoint_enabled'):
         bot.send_message_parsed(event.conv, "checkpoint function disabled")
@@ -32,4 +32,5 @@ def checkpoint(bot, event, date1=time.strftime("%y/%m/%d"), hour1=time.strftime(
         if checkpoint_time > t:
             break
         segments.append(hangups.ChatMessageSegment('{} {}'.format(num,checkpoint_time)))
+        segments.append(hangups.ChatMessageSegment('\n', hangups.SegmentType.LINE_BREAK))
     bot.send_message_segments(event.conv, segments)
