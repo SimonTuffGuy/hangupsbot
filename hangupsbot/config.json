@@ -94,5 +94,7 @@
   "mentionallwhitelist": [],
   "mentionquidproquo": false,
   "donotdisturb": [],
-  "plugins": null
+  "plugins": null,
+  "checkpoint_enabled": true,
+  "timezone": "America/Chicago"
 }
