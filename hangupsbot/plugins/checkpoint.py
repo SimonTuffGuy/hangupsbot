@@ -2,7 +2,7 @@ import hangups
 
 from datetime import datetime, timedelta
 import time
-import mktime
+from time import mktime
 
 def checkpoint(bot, event, date1=time.strftime("%y/%m/%d"), hour1=time.strftime("%H"), *args):
     """returns the time of the next checkpoint"""
