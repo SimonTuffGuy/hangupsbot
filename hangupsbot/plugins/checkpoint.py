@@ -5,7 +5,7 @@ import time
 from time import mktime
 import pytz
 
-def checkpoint(bot, event, date1=datetime.utcnow().strftime("%m/%d/%y"), hour1=datetime.utcnow().strftime("%H"), *args):
+def checkpoint(bot, event, date1=datetime.utcnow().strftime("%m-%d-%y"), hour1=datetime.utcnow().strftime("%H"), *args):
     """returns the time of the next checkpoint"""
     if not bot.get_config_option('checkpoint_enabled'):
         bot.send_message_parsed(event.conv, "checkpoint function disabled")
