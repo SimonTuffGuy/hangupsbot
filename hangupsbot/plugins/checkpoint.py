@@ -14,9 +14,7 @@ def checkpoint(bot, event, date1=time.strftime("%m/%d/%y"), hour1=time.strftime(
     
     try:
         stamp = '{} {}'.format(date1,hour1)
-        bot.send_message_parsed(event.conv, 'Stamp: {}'.format(stamp))
         t = datetime.strptime(stamp, '%m/%d/%y %H')
-        bot.send_message_parsed(event.conv, 'Valid Date: {}'.format(t))
     except ValueError:
         bot.send_message_parsed(event.conv, 'Invalid Date: {}'.format(stamp))
         return
@@ -26,7 +24,7 @@ def checkpoint(bot, event, date1=time.strftime("%m/%d/%y"), hour1=time.strftime(
     start = t0 + timedelta(hours=cycles * hours_per_cycle)
     checkpoint_times = map(lambda x: start + timedelta(hours=x), range(0, hours_per_cycle, 5))
     
-    segments = [hangups.ChatMessageSegment("Checkpoint   Time"),
+    segments = [hangups.ChatMessageSegment("Checkpoint Times for {} at {}:00").format(date1,hour1),
                 hangups.ChatMessageSegment('\n', hangups.SegmentType.LINE_BREAK)]
     for num, checkpoint_time in enumerate(checkpoint_times):
         if checkpoint_time > t:
