@@ -24,7 +24,7 @@ def checkpoint(bot, event, date1=time.strftime("%m/%d/%y"), hour1=time.strftime(
     start = t0 + timedelta(hours=cycles * hours_per_cycle)
     checkpoint_times = map(lambda x: start + timedelta(hours=x), range(0, hours_per_cycle, 5))
     
-    segments = [hangups.ChatMessageSegment("Checkpoint Times for {} at {}:00").format(date1,hour1),
+    segments = [hangups.ChatMessageSegment('Checkpoint Times for {} at {}:00'.format(date1,hour1), is_bold=True),
                 hangups.ChatMessageSegment('\n', hangups.SegmentType.LINE_BREAK)]
     for num, checkpoint_time in enumerate(checkpoint_times):
         if checkpoint_time > t:
