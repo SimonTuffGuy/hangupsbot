@@ -3,7 +3,7 @@ import hangups
 from datetime import datetime, timedelta
 import time
 
-def checkpoint(bot, event, date1=time.strftime("%d/%m/%y"), hour1=time.strftime("%H"), *args):
+def checkpoint(bot, event, date1=time.strftime("%y/%m/%d"), hour1=time.strftime("%H"), *args):
     """returns the time of the next checkpoint"""
     if not bot.get_config_option('checkpoint_enabled'):
         bot.send_message_parsed(event.conv, "checkpoint function disabled")
