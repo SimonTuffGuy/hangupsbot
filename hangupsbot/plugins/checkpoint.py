@@ -3,18 +3,20 @@ import hangups
 from datetime import datetime, timedelta
 import time
 from time import mktime
+import pytz
 
-def checkpoint(bot, event, date1=time.strftime("%m/%d/%y"), hour1=time.strftime("%H"), *args):
+def checkpoint(bot, event, date1=datetime.utcnow().strftime("%m/%d/%y"), hour1=datetime.utcnow().strftime("%H"), *args):
     """returns the time of the next checkpoint"""
     if not bot.get_config_option('checkpoint_enabled'):
         bot.send_message_parsed(event.conv, "checkpoint function disabled")
         return
-    t0 = datetime.strptime('2014-07-09 11', '%Y-%m-%d %H')
+    dtformat = "%m-%d-%y %H"
+    t0 = datetime.strptime('07-09-14 13', dtformat)
     hours_per_cycle = 175
     
     try:
         stamp = '{} {}'.format(date1,hour1)
-        t = datetime.strptime(stamp, '%m/%d/%y %H')
+        t = datetime.strptime(stamp, dtformat)
     except ValueError:
         bot.send_message_parsed(event.conv, 'Invalid Date: {}'.format(stamp))
         return
@@ -29,6 +31,6 @@ def checkpoint(bot, event, date1=time.strftime("%m/%d/%y"), hour1=time.strftime(
     for num, checkpoint_time in enumerate(checkpoint_times):
         if checkpoint_time > t:
             break
-        segments.append(hangups.ChatMessageSegment('{} {}'.format(num,checkpoint_time)))
+        segments.append(hangups.ChatMessageSegment('{} {}'.format(num,checkpoint_time.strftime("%H:%M"))))
         segments.append(hangups.ChatMessageSegment('\n', hangups.SegmentType.LINE_BREAK))
     bot.send_message_segments(event.conv, segments)
