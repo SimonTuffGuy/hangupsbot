@@ -11,7 +11,7 @@ def checkpoint(bot, event, date1=datetime.utcnow().strftime("%m-%d-%y"), hour1=d
         bot.send_message_parsed(event.conv, "checkpoint function disabled")
         return
     dtformat = "%m-%d-%y %H"
-    t0 = datetime.strptime('07-09-14 13', dtformat)
+    t0 = datetime.strptime('07-09-14 16', dtformat)
     hours_per_cycle = 175
     
     try:
