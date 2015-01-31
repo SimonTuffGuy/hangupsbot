@@ -6,8 +6,8 @@ from time import mktime
 from dateutil import parser
 import pytz
 
-def cp(*args):
-    """returns the time left until the next checkpoint"""
+def cp(bot, event,*args):
+    """Returns the time left until the next checkpoint"""
     if not bot.get_config_option('checkpoint_enabled'):
         bot.send_message_parsed(event.conv, "Checkpoint Cunction Disabled")
         return
@@ -32,7 +32,7 @@ def cp(*args):
     checkpoints = (cdelta // checkpoint) +1
     checkpoint_start = cycle_start+(checkpoint*checkpoints)
     cpdelta = checkpoint_start - t1
-    total_seconds = int(turnaround.total_seconds())
+    total_seconds = int(cpdelta.total_seconds())
     hours, remainder = divmod(total_seconds,60*60)
     minutes, seconds = divmod(remainder,60)
     
@@ -43,8 +43,8 @@ def cp(*args):
     #output the results
     bot.send_message_segments(event.conv, segments)
     
-def cps(date1=None, hour1=None, *args):
-    """returns the time of the next checkpoint"""
+def cps(bot, event, date1=None, hour1=None, *args):
+    """cp <date> <hour> returns the checkpoints before the date and time specified.  If no time is entered, the current time is used."""
     if not bot.get_config_option('checkpoint_enabled'):
         bot.send_message_parsed(event.conv, "Checkpoint Cunction Disabled")
         return
