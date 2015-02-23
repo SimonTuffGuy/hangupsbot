@@ -6,8 +6,45 @@ from time import mktime
 from dateutil import parser
 import pytz
 
-def checkpoint(bot, event, date1=None, hour1=None, *args):
-    """returns the time of the next checkpoint"""
+def cp(bot, event,*args):
+    """Returns the time left until the next checkpoint"""
+    if not bot.get_config_option('checkpoint_enabled'):
+        bot.send_message_parsed(event.conv, "Checkpoint Cunction Disabled")
+        return
+    if not bot.get_config_option('timezone'):
+        bot.send_message_parsed(event.conv, "No Timezone Set")
+        return
+    tz = pytz.timezone(bot.get_config_option('timezone'))
+    utc = pytz.timezone('UTC')
+    dtformat = "%m-%d-%y %H"
+    t1 = utc.localize(datetime.utcnow())
+    t0 = utc.localize(datetime(2014, 7, 9, 10, 0))
+    #print (t1)
+    tdelta = t1-t0
+    cycle = timedelta(hours=175)
+    cycles = tdelta // cycle
+    #print(cycles)
+    cycle_start = t0+(cycles*cycle)
+    #print(cycle_start)
+    cycle_start
+    cdelta = t1 - cycle_start
+    checkpoint = timedelta(hours=5)
+    checkpoints = (cdelta // checkpoint) +1
+    checkpoint_start = cycle_start+(checkpoint*checkpoints)
+    cpdelta = checkpoint_start - t1
+    total_seconds = int(cpdelta.total_seconds())
+    hours, remainder = divmod(total_seconds,60*60)
+    minutes, seconds = divmod(remainder,60)
+    
+    segments = [hangups.ChatMessageSegment('Time Until Next Checkpoint', is_bold=True),
+    hangups.ChatMessageSegment('\n', hangups.SegmentType.LINE_BREAK),
+    hangups.ChatMessageSegment('{} hrs {} mins {} secs'.format(hours,minutes,seconds))
+    ]
+    #output the results
+    bot.send_message_segments(event.conv, segments)
+    
+def cps(bot, event, date1=None, hour1=None, *args):
+    """cp <date> <hour> returns the checkpoints before the date and time specified.  If no time is entered, the current time is used."""
     if not bot.get_config_option('checkpoint_enabled'):
         bot.send_message_parsed(event.conv, "Checkpoint Cunction Disabled")
         return
