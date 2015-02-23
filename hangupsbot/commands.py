@@ -5,7 +5,6 @@ from hangups.ui.utils import get_conv_name
 
 from utils import text_to_segments
 
-from inspect import getmembers, isfunction
 
 class CommandDispatcher(object):
     """Register commands and run them"""
@@ -13,7 +12,6 @@ class CommandDispatcher(object):
         self.commands = {}
         self.unknown_command = None
 
-        self._handlers = []
 
     @asyncio.coroutine
     def run(self, bot, event, *args, **kwds):
@@ -35,8 +33,10 @@ class CommandDispatcher(object):
         try:
             yield from func(bot, event, *args, **kwds)
         except Exception as e:
-            print(e)
-            raise
+            message = "CommandDispatcher.run: {}".format(func.__name__)
+            print("EXCEPTION in " + message)
+            logging.exception(message)
+
 
     def register(self, func):
         """Decorator for registering command"""
@@ -48,49 +48,6 @@ class CommandDispatcher(object):
         self.unknown_command = func
         return func
 
-    def register_handler(self, function):
-        """plugins call this to preload any handlers to be used by MessageHandler"""
-        self._handlers.append(function)
-
-    def attach_extra_handlers(self, MessageHandler):
-        """called by MessageHandler to get all handlers loaded by plugins"""
-        MessageHandler._extra_handlers = self._handlers
-
-    def initialise_plugins(self, plugin_list):
-        for module in plugin_list: 
-            module_path = "plugins.{}".format(module)
-            exec("import {}".format(module_path))
-            functions_list = [o for o in getmembers(sys.modules[module_path], isfunction)]
-
-            available_commands = False # default: ALL
-            candidate_commands = []
-
-            """
-            pass 1: run _initialise()/_initialize() and filter out "hidden" functions
-
-            optionally, _initialise()/_initialize() can return a list of functions available to the user,
-                use this return value when importing functions from external libraries
-
-            """
-            for function in functions_list:
-                function_name = function[0]
-                if function_name ==  "_initialise" or function_name ==  "_initialize":
-                    _return = function[1](self)
-                    if type(_return) is list:
-                        print("plugin introspection: {} implements {}".format(module_path, _return))
-                        available_commands = _return
-                elif function_name.startswith("_"):
-                    pass
-                else:
-                    candidate_commands.append(function)
-
-            """pass 2: register filtered functions"""
-            for function in candidate_commands:
-                function_name = function[0]
-                if available_commands is False or function_name in available_commands:
-                    self.register(function[1])
-                    print("plugin command: {} -> {}".format(module_path, function_name))
-
 
 # CommandDispatcher singleton
 command = CommandDispatcher()
@@ -99,20 +56,31 @@ command = CommandDispatcher()
 def help(bot, event, cmd=None, *args):
     """list supported commands"""
     if not cmd:
-        segments = [hangups.ChatMessageSegment('Supported commands:', is_bold=True),
-                    hangups.ChatMessageSegment('\n', hangups.SegmentType.LINE_BREAK),
-                    hangups.ChatMessageSegment(', '.join(sorted(command.commands.keys())))]
+        admins_list = bot.get_config_suboption(event.conv_id, 'admins')
+
+        commands_all = command.commands.keys()
+        commands_admin = bot._handlers.get_admin_commands(event.conv_id)
+        commands_nonadmin = list(set(commands_all) - set(commands_admin))
+
+        text_html = '<b>User commands:</b><br />' + ', '.join(sorted(commands_nonadmin))
+        if event.user_id.chat_id in admins_list:
+            text_html = text_html + '<br /><b>Admin commands:</b><br />' + ', '.join(sorted(commands_admin))
     else:
         try:
             command_fn = command.commands[cmd]
-            segments = [hangups.ChatMessageSegment('{}:'.format(cmd), is_bold=True),
-                        hangups.ChatMessageSegment('\n', hangups.SegmentType.LINE_BREAK)]
-            segments.extend(text_to_segments(command_fn.__doc__))
+            text_html = "<b>{}</b>: {}".format(cmd, command_fn.__doc__)
         except KeyError:
             yield from command.unknown_command(bot, event)
             return
 
-    bot.send_message_segments(event.conv, segments)
+    # help can get pretty long, so we send a short message publicly, and the actual help privately
+    conv_1on1_initiator = bot.get_1on1_conversation(event.user.id_.chat_id)
+    if conv_1on1_initiator:
+        bot.send_message_parsed(conv_1on1_initiator, text_html)
+        if conv_1on1_initiator.id_ != event.conv_id:
+            bot.send_message_parsed(event.conv, "<i>{}, I've sent you some help ;)</i>".format(event.user.full_name))
+    else:
+        bot.send_message_parsed(event.conv, "<i>{}, before I can help you, you need to private message me and say hi.</i>".format(event.user.full_name))
 
 
 @command.register

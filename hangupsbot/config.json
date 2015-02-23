@@ -10,7 +10,6 @@
       "Hello world!"
     ]
   ],
-  "autoreplies_enabled": true,
   "commands_admin": [
     "rename",
     "leave",
@@ -20,32 +19,23 @@
     "hangouts",
     "reload",
     "quit",
-    "config"
+    "config",
+    "topic"
   ],
   "spreadsheet_enabled": false,
   "spreadsheet_url": "INSERT_PUBLIC_URL_OF_GSHEET_HERE",
   "spreadsheet_table_class": "waffle",
   "syncing_enabled": false,
+  "sync_rooms": [["CONV1_ID", "CONV2_ID"],[]],
   "commands_enabled": true,
   "conversations": {
-    "CONV1_ID": {
-      "forward_to": [
-        "CONV2_ID"
-      ]
-    },
     "CONV2_ID": {
       "autoreplies_enabled": false,
       "commands_enabled": false,
       "mentionall": false,
-      "mentionallwhitelist": [],
-      "forward_to": [
-        "CONV1_ID"
-      ],
-      "forwarding_enabled": false,
-      "sync_rooms": ["CHAT_ID_OF_ROOMS_TO_SYNC_TO"]
+      "mentionallwhitelist": []
     }
   },
-  "forwarding_enabled": false,
   "pushbullet": {
   },
   "jsonrpc": [
@@ -68,10 +58,16 @@
       "port": 8001
     },
     {
-      "certfile": "/root/server.pem",
+      "certfile": null,
       "module": "sinks.hubotreceive.post.receiver",
       "name": "127.0.0.1",
       "port": 8081
+    },
+    {
+      "certfile": null,
+      "module": "sinks.google.scripts.webhookReceiver",
+      "name": "127.0.0.1",
+      "port": 8002
     }
   ],
   "hooks": [
@@ -81,12 +77,6 @@
       {
         "storage_path": false
       }
-    },
-    {
-      "config": {
-        "HUBOT_URL": "http://127.0.0.1:8080/receive/"
-      },
-      "module": "hooks.hubotsend.post.sender"
     }
   ],
   "mentionerrors": true,
@@ -96,5 +86,6 @@
   "donotdisturb": [],
   "plugins": null,
   "checkpoint_enabled": true,
-  "timezone": "America/Chicago"
+  "timezone": "America/Chicago",
+  "strict_botkeeper_check": false
 }

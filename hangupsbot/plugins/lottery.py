@@ -2,10 +2,15 @@ import asyncio,re
 
 from random import shuffle
 
-draw_lists = {}
 
-def _initialise(command):
-    command.register_handler(_handle_me_action)
+def _initialise(Handlers, bot=None):
+    Handlers.register_handler(_handle_me_action)
+    if "register_admin_command" in dir(Handlers) and "register_user_command" in dir(Handlers):
+        Handlers.register_admin_command(["prepare", "perform_drawing"])
+        return []
+    else:
+        print("LOTTERY: LEGACY FRAMEWORK MODE")
+        return ["prepare"]
 
 
 @asyncio.coroutine
@@ -16,27 +21,57 @@ def _handle_me_action(bot, event, command):
         yield from command.run(bot, event, *["perform_drawing"])
 
 
+def _get_global_lottery_name(bot, conversation_id, listname):
+    # support for syncrooms plugin
+    if bot.get_config_option('syncing_enabled'):
+        syncouts = bot.get_config_option('sync_rooms')
+        if syncouts:
+            for sync_room_list in syncouts:
+                # seek the current room, if any
+                if conversation_id in sync_room_list:
+                    _linked_rooms = sync_room_list
+                    _linked_rooms.sort() # keeps the order consistent
+                    conversation_id = ":".join(_linked_rooms)
+                    print("LOTTERY: joint room keys {}".format(conversation_id))
+
+    return conversation_id + ":" + listname
+
+
+def _load_lottery_state(bot):
+    draw_lists = {}
+
+    if bot.memory.exists(["lottery"]):
+        print("LOTTERY: loading from memory")
+        draw_lists = bot.memory["lottery"]
+
+    return draw_lists
+
+
+def _save_lottery_state(bot, draw_lists):
+    bot.memory.set_by_path(["lottery"], draw_lists)
+    bot.memory.save()
+
+
 def prepare(bot, event, *args):
-    """prepares a bundle of things for a random draw
-        /bot prepare numbers 1-8
-            "numbers" = [1,2,3,4,5,6,7,8]
-        /bot prepare numbers 42,74,98,3
-            "numbers" = [42,74,98,3]
-        /bot prepare sticks 3long1short
-            "stick" = [long,long,long,short]
-        /bot prepare 1-3
-            "default" = [1,2,3]
-
-        note: see /me draw for user lottery/drawings
-
-        XXX: generated lists are NOT saved on bot termination
+    """prepares a bundle of "things" for a random lottery.
+    parameter: optional "things", draw definitions. if "things" is not specified, "default" will 
+    be used. draw definitions can be a simple range such as 1-8; a specific list of things to draw 
+    such as a,b,c,d,e; or a shorthand list such as 2abc1xyz (which prepares list abc,abc,xyz). any
+    user can draw once from the default lottery with command /me draws. if multiple lotteries 
+    (non-default) are active, the user should use: /me draws a "thing". special keywords for
+    draw definitions: COMPASS creates list based on the cardinal and ordinal directions.
     """
+
+    max_items = 100
+
     listname = "default"
     listdef = args[0]
     if len(args) == 2:
         listname = args[0]
         listdef = args[1]
-    global_draw_name = event.conv.id_ + "-" + listname
+    global_draw_name = _get_global_lottery_name(bot, event.conv.id_, listname)
+
+    draw_lists = _load_lottery_state(bot) # load any existing draws
 
     draw_lists[global_draw_name] = {"box": [], "users": {}}
 
@@ -80,13 +115,20 @@ def prepare(bot, event, *args):
         else:
             raise Exception("prepare: unrecognised match (!csv, !range, !numberToken): {}".format(listdef))
 
-    if len(draw_lists[global_draw_name]["box"]) > 0:
+    if len(draw_lists[global_draw_name]["box"]) > max_items:
+        del draw_lists[global_draw_name]
+        bot.send_message_parsed(
+            event.conv,
+            "Wow! Too many items to draw in <b>{}</b> lottery. Try {} items or less...".format(listname, max_items))
+    elif len(draw_lists[global_draw_name]["box"]) > 0:
         shuffle(draw_lists[global_draw_name]["box"])
         bot.send_message_parsed(
             event.conv,
             "The <b>{}</b> lottery is ready: {} items loaded and shuffled into the box.".format(listname, len(draw_lists[global_draw_name]["box"])))
     else:
         raise Exception("prepare: {} was initialised empty".format(global_draw_name))
+
+    _save_lottery_state(bot, draw_lists) # persist lottery drawings
 
 
 def perform_drawing(bot, event, *args):
@@ -99,7 +141,10 @@ def perform_drawing(bot, event, *args):
 
         XXX: check is for singular, plural "-s" and plural "-es"
     """
-    pattern = re.compile("/me draws?( +(a +|an +)?([a-z0-9\-_]+))?$", re.IGNORECASE)
+
+    draw_lists = _load_lottery_state(bot) # load in any existing lotteries
+
+    pattern = re.compile("/me draws?( +(a +|an +|from +)?([a-z0-9\-_]+))?$", re.IGNORECASE)
     if pattern.match(event.text):
         listname = "default"
 
@@ -118,17 +163,18 @@ def perform_drawing(bot, event, *args):
         global_draw_name = None
         _test_name = None
         for word in _plurality:
-            _test_name = event.conv.id_ + "-" + word
+            _test_name = _get_global_lottery_name(bot, event.conv.id_, word)
             if _test_name in draw_lists:
                 global_draw_name = _test_name
+                print("LOTTERY: {} is valid".format(global_draw_name))
                 break
 
         if global_draw_name is not None:
             if len(draw_lists[global_draw_name]["box"]) > 0:
                 if event.user.id_.chat_id in draw_lists[global_draw_name]["users"]:
-                    # user already drew something from the box
+                    # user already drawn something from the box
                     bot.send_message_parsed(event.conv,
-                        "<b>{}</b>, you have already drew <b>{}</b> from the <b>{}</b> box".format(
+                        "<b>{}</b>, you have already drawn <b>{}</b> from the <b>{}</b> box".format(
                             event.user.full_name,
                             draw_lists[global_draw_name]["users"][event.user.id_.chat_id],
                             word))
@@ -151,3 +197,5 @@ def perform_drawing(bot, event, *args):
                     text_finished = "You drew a {} previously.".format(draw_lists[global_draw_name]["users"][event.user.id_.chat_id]);
 
                 bot.send_message_parsed(event.conv, text_finished)
+
+    _save_lottery_state(bot, draw_lists) # persist lottery drawings
