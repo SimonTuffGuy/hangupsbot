@@ -8,9 +8,6 @@ import pytz
 
 def cp(bot, event,*args):
     """Returns the time left until the next checkpoint"""
-    if not bot.get_config_option('checkpoint_enabled'):
-        bot.send_message_parsed(event.conv, "Checkpoint Cunction Disabled")
-        return
     if not bot.get_config_option('timezone'):
         bot.send_message_parsed(event.conv, "No Timezone Set")
         return
@@ -45,9 +42,6 @@ def cp(bot, event,*args):
     
 def cps(bot, event, date1=None, hour1=None, *args):
     """cp <date> <hour> returns the checkpoints before the date and time specified.  If no time is entered, the current time is used."""
-    if not bot.get_config_option('checkpoint_enabled'):
-        bot.send_message_parsed(event.conv, "Checkpoint Cunction Disabled")
-        return
     if not bot.get_config_option('timezone'):
         bot.send_message_parsed(event.conv, "No Timezone Set")
         return
