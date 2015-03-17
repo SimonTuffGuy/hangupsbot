@@ -5,13 +5,22 @@ from hangups.ui.utils import get_conv_name
 
 from utils import text_to_segments
 
-def _initialise(command):
-    return ["users", "user", "hangouts", "rename", "leave", "reload", "quit", "config", "whoami", "whereami", "echo"]
+def _initialise(Handlers, bot=None):
+    if "register_admin_command" in dir(Handlers) and "register_user_command" in dir(Handlers):
+        Handlers.register_admin_command(["users", "user", "hangouts", "hangout", "rename", "leave", "reload", "quit", "config", "whereami"])
+        Handlers.register_user_command(["whoami", "echo"])
+        return []
+    else:
+        print("DEFAULT: LEGACY FRAMEWORK MODE")
+        return ["users", "user", "hangouts", "rename", "leave", "reload", "quit", "config", "whoami", "whereami", "echo", "hangout"]
 
 
 def echo(bot, event, *args):
     """echo back requested text"""
-    bot.send_message(event.conv, '{}'.format(' '.join(args)))
+    text = ' '.join(args)
+    if text.lower().strip().startswith("/bot "):
+        text = "NOPE! Some things aren't worth repeating."
+    bot.send_message(event.conv, text)
 
 
 def users(bot, event, *args):
@@ -56,47 +65,75 @@ def user(bot, event, username, *args):
 
 
 def hangouts(bot, event, *args):
-    """list all active hangouts the bot is participating in
-        details: c ... commands, f ... forwarding, a ... autoreplies"""
-    segments = [hangups.ChatMessageSegment('list of active hangouts:', is_bold=True),
-                hangups.ChatMessageSegment('\n', hangups.SegmentType.LINE_BREAK)]
-    for c in bot.list_conversations():
-        s = '{} [c: {:d}, f: {:d}, a: {:d}]'.format(get_conv_name(c, truncate=True),
-                                                    bot.get_config_suboption(c.id_, 'commands_enabled'),
-                                                    bot.get_config_suboption(c.id_, 'forwarding_enabled'),
-                                                    bot.get_config_suboption(c.id_, 'autoreplies_enabled'))
-        segments.append(hangups.ChatMessageSegment(s))
-        segments.append(hangups.ChatMessageSegment('\n', hangups.SegmentType.LINE_BREAK))
+    """list all active hangouts.
+    key: c = commands enabled, f = forwarding enabled
+    """
 
-    bot.send_message_segments(event.conv, segments)
+    line = "<b>list of active hangouts:</b><br />"
+
+    for c in bot.list_conversations():
+        line = line + "{}".format(get_conv_name(c, truncate=True))
+
+        suboptions = []
+
+        _value = bot.get_config_suboption(c.id_, 'commands_enabled')
+        if _value:
+            suboptions.append("c")
+        _value = bot.get_config_suboption(c.id_, 'forwarding_enabled')
+        if _value:
+            suboptions.append("f")
+        if len(suboptions) > 0:
+            line = line + ' [ ' + ', '.join(suboptions) + ' ]'
+
+        line = line + "<br />"
+
+    bot.send_message_parsed(event.conv, line)
+
+
+def hangout(bot, event, *args):
+    """list all hangouts matching search text"""
+    text_search = ' '.join(args)
+    if not text_search:
+        return
+    text_message = '<b>results for hangouts named "{}"</b><br />'.format(text_search)
+    for conv in bot.list_conversations():
+        conv_name = get_conv_name(conv)
+        if text_search.lower() in conv_name.lower():
+            text_message = text_message + "<i>" + conv_name + "</i>"
+            text_message = text_message + " ... " + conv.id_
+            text_message = text_message + "<br />"
+    bot.send_message_parsed(event.conv.id_, text_message)
 
 
 def rename(bot, event, *args):
-    """Rename Hangout"""
+    """rename Hangout"""
     yield from bot._client.setchatname(event.conv_id, ' '.join(args))
 
 
-def leave(bot, event, conversation=None, *args):
+def leave(bot, event, conversation_id=None, *args):
     """exits current or other specified hangout"""
-    convs = []
-    if not conversation:
-        convs.append(event.conv)
-    else:
-        conversation = conversation.strip().lower()
-        for c in bot.list_conversations():
-            if conversation in get_conv_name(c, truncate=True).lower():
-                convs.append(c)
 
-    for c in convs:
-        yield from c.send_message([
-            hangups.ChatMessageSegment('I\'ll be back!')
-        ])
-        yield from bot._conv_list.leave_conversation(c.id_)
+    leave_quietly = False
+    convs = []
+
+    if not conversation_id:
+        convs.append(event.conv.id_)
+    elif conversation_id=="quietly":
+        convs.append(event.conv.id_)
+        leave_quietly = True
+    else:
+        convs.append(conversation_id) 
+
+    for c_id in convs:
+        if not leave_quietly:
+            bot.send_message_parsed(c_id, 'I\'ll be back!')
+        yield from bot._conv_list.leave_conversation(c_id)
 
 
 def reload(bot, event, *args):
-    """Reload config"""
+    """reload config and memory, useful if manually edited on running bot"""
     bot.config.load()
+    bot.memory.load()
 
 
 def quit(bot, event, *args):
@@ -107,7 +144,7 @@ def quit(bot, event, *args):
 
 
 def config(bot, event, cmd=None, *args):
-    """Displays or modifies the configuration
+    """displays or modifies the configuration
         Parameters: /bot config get [key] [subkey] [...]
                     /bot config set [key] [subkey] [...] [value]
                     /bot config append [key] [subkey] [...] [value]
@@ -167,7 +204,7 @@ def config(bot, event, cmd=None, *args):
 
 
 def whoami(bot, event, *args):
-    """whoami: get user id"""
+    """get your user id"""
 
     if bot.memory.exists(['user_data', event.user_id.chat_id, "nickname"]):
         try:
@@ -182,7 +219,8 @@ def whoami(bot, event, *args):
 
 
 def whereami(bot, event, *args):
-    """whereami: get conversation id"""
+    """get current conversation id"""
+
     bot.send_message_parsed(
       event.conv,
       "You are at <b>{}</b>, conv_id = <i>{}</i>".format(
