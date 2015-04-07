@@ -162,7 +162,7 @@ def mention(bot, event, *args):
     exact_nickname_matches = []
     mention_list = []
     for u in users_in_chat:
-		[first_name_lower, last_name_lower] = u.full_name.lower().split(" ")
+        name_tokens = u.full_name.lower().split(" ")
 
         # mentions also checks nicknames if one is configured
         #  exact matches only! see following IF block
@@ -172,13 +172,15 @@ def mention(bot, event, *args):
             nickname = bot.memory.get_by_path(['user_data', u.id_.chat_id, "nickname"])
             nickname_lower = nickname.lower()
 
+        partial_name_match = False
+        for name_token in name_tokens:
+            if username_lower == name_token:
+                partial_name_match = True
+
         if username_lower == "all" or \
-				username_lower == first_name_lower or \
-				username_lower == last_name_lower or \
+                partial_name_match == True or \
 				username_lower == u.full_name.replace(" ", "").lower() or \
 				username_lower == u.full_name.replace(" ", "_").lower() or \
-                #username_lower in u.full_name.replace(" ", "").lower() or \
-                #username_lower in u.full_name.replace(" ", "_").lower() or \
                 username_lower == nickname_lower:
 
             logging.info("user {} ({}) is present".format(u.full_name, u.id_.chat_id))
