@@ -538,8 +538,7 @@ class HangupsBot(object):
     def _on_connect(self, initial_data):
         """Handle connecting for the first time"""
         print('Connected!')
-        bot_command = self.get_config_option("responsetrigger")
-        self._handlers = handlers.EventHandler(self, bot_command)
+        self._handlers = handlers.EventHandler(self)
 
         self._load_plugins()
 
