@@ -57,7 +57,10 @@ def lookup(bot, event, *args):
                 segments.append(hangups.ChatMessageSegment('Row {}: '.format(counter+1),
                                                        is_bold=True))
                 for datapoint in row:
-                    segments.append(hangups.ChatMessageSegment(datapoint))
+                    if datapoint.startswith('http'):
+                        segments.append(hangups.ChatMessageSegment("", hangups.SegmentType.LINK, link_target=datapoint))
+                    else:
+                        segments.append(hangups.ChatMessageSegment(datapoint))
                     segments.append(hangups.ChatMessageSegment(' | ', is_bold=True))
                 segments.append(hangups.ChatMessageSegment('\n', hangups.SegmentType.LINE_BREAK))
                 counter += 1
