@@ -1,5 +1,22 @@
 import hangups
 
+def getsheet(bot, event, *args):
+    """reply with stored spreadsheet for current conversation"""
+
+    text = bot.get_config_option('spreadsheet_url')
+    if not bot.get_config_option('spreadsheet_enabled'):
+        bot.send_message_parsed(event.conv, _("Spreadsheet function disabled"))
+        return
+
+    if text is None:
+        bot.send_message_parsed(event.conv, _("Spreadsheet URL not set"))
+        return
+    else:
+        bot.send_message_parsed(
+            event.conv,
+            _("<b>{}</b>, spreadsheet for this conversation: <a href=\"{}\">{}</a>").format(
+                event.user.full_name, text, text))
+
 def lookup(bot, event, *args):
     """find keywords in a specified spreadsheet"""
 
@@ -50,12 +67,8 @@ def lookup(bot, event, *args):
             if (keyword_lower in testcell) and counter < counter_max and matchfound == 0:
                 htmlmessage += _('<br />Row {}: ').format(counter+1)
                 for datapoint in row:
-                    if datapoint.startswith('http'):
-                        segments.append(hangups.ChatMessageSegment("", hangups.SegmentType.LINK, link_target=datapoint))
-                    else:
-                        segments.append(hangups.ChatMessageSegment(datapoint))
-                    segments.append(hangups.ChatMessageSegment(' | ', is_bold=True))
-                segments.append(hangups.ChatMessageSegment('\n', hangups.SegmentType.LINE_BREAK))
+                    htmlmessage += '{} | '.format(datapoint)
+                htmlmessage += '<br />'
                 counter += 1
                 matchfound = 1
             elif (keyword_lower in testcell) and counter >= counter_max:
