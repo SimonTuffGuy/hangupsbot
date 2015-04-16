@@ -1,5 +1,6 @@
 import goslate
 import asyncio
+import urllib
 
 gs = goslate.Goslate()
 
@@ -10,6 +11,7 @@ def _initialise(command):
 def _handle_message(bot, event, command):
     language_map = gs.get_languages()
     raw_text = event.text.lower()
+    raw_text = ' '.join(raw_text.split())
     translate_target = None
 
     for iso_language in language_map:
@@ -25,6 +27,9 @@ def _handle_message(bot, event, command):
 
 @asyncio.coroutine
 def _translate(bot, event, text, iso_language, text_language):
-    print('TRANSLATE: "{}" to {}'.format(text, iso_language))
-    translated = gs.translate(text, iso_language)
-    bot.send_message_parsed(event.conv, "<i>" + text_language + "</i> : " + translated)
+    print(_('TRANSLATE: "{}" to {}').format(text, iso_language))
+    try:
+        translated = gs.translate(text, iso_language)
+        bot.send_message_parsed(event.conv, "<i>" + text_language + "</i> : " + translated)
+    except urllib.error.HTTPError as e:
+        bot.send_message_parsed(event.conv, "Translation server error: <i>{}</i>".format(str(e)))
