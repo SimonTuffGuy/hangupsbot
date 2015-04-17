@@ -35,7 +35,7 @@ def _handle_keyword(bot, event, command):
             if _internal.keywords[user.id_.chat_id] and not user.id_.chat_id in event.user.id_.chat_id:
                 for phrase in _internal.keywords[user.id_.chat_id]:
                     regexphrase = "\\b" + phrase + "\\b"
-                    if re.search(regexphrase, event.text, re.IGNORECASE):
+                    if re.search(regexphrase, event.text, re.IGNORECASE) and not re.search("@" + phrase + "\\b"):
                         _send_notification(bot, event, phrase, user)
         except KeyError:
             # User probably hasn't subscribed to anything
