@@ -9,3 +9,4 @@ aiohttp
 /hangupsbot/__pycache__
 /build
 /scripts
+/public_html

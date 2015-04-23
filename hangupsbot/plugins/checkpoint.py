@@ -41,7 +41,7 @@ def cp(bot, event,*args):
     bot.send_message_segments(event.conv, segments)
     
 def cps(bot, event, date1=None, hour1=None, *args):
-    """cp <date> <hour> returns the checkpoints before the date and time specified.  If no time is entered, the current time is used."""
+    """cps <date> <time> returns the checkpoints before the date and time specified, starting with the previous cycle.  If no date or time is entered, the current time is used."""
     if not bot.get_config_option('timezone'):
         bot.send_message_parsed(event.conv, "No Timezone Set")
         return
@@ -58,6 +58,8 @@ def cps(bot, event, date1=None, hour1=None, *args):
         t=utc.localize(datetime.utcnow())
     #else, set the datetime as specified the the arguments
     else:
+        if hour1 is None:
+            hour1 = time.strftime('%H:%M',time.localtime())
         stamp = '{} {}'.format(date1,hour1)
         try:
             
