@@ -65,7 +65,7 @@ def cycle(bot, event,*args):
     hours, remainder = divmod(total_seconds,60*60)
     minutes, seconds = divmod(remainder,60)
     
-    segments = [hangups.ChatMessageSegment('Time Until Next Checkpoint', is_bold=True),
+    segments = [hangups.ChatMessageSegment('Time Until Next Cycle', is_bold=True),
     hangups.ChatMessageSegment('\n', hangups.SegmentType.LINE_BREAK),
     hangups.ChatMessageSegment('{} hrs {} mins {} secs'.format(hours,minutes,seconds))
     ]
@@ -120,7 +120,7 @@ def cps(bot, event, date1=None, hour1=None, *args):
         
         if num is 0:
             num = '*'
-        if num is 35:
+        elif num is 35:
             num = '***'
         segments.append(hangups.ChatMessageSegment('{} {}'.format(num,checkpoint_time.astimezone(tz).strftime("%m-%d-%y %H:%M %Z"))))
         segments.append(hangups.ChatMessageSegment('\n', hangups.SegmentType.LINE_BREAK))

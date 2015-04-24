@@ -219,17 +219,18 @@ def mention(bot, event, *args):
         mention_list = exact_nickname_matches
 
     if len(mention_list) > 1 and username_lower != "all":
-        if conv_1on1_initiator:
-            text_html = _('{} users would be mentioned with "@{}"! Be more specific. List of matching users:<br />').format(
-                len(mention_list), username, conversation_name)
+        if bot.get_config_suboption(event.conv_id, 'mentionerrors_dm'):
+            if conv_1on1_initiator:
+                text_html = _('{} users would be mentioned with "@{}"! Be more specific. List of matching users:<br />').format(
+                    len(mention_list), username, conversation_name)
 
-            for u in mention_list:
-                text_html += u.full_name
-                if bot.memory.exists(['user_data', u.id_.chat_id, "nickname"]):
-                    text_html += ' (' + bot.memory.get_by_path(['user_data', u.id_.chat_id, "nickname"]) + ')'
-                text_html += '<br />'
+                for u in mention_list:
+                    text_html += u.full_name
+                    if bot.memory.exists(['user_data', u.id_.chat_id, "nickname"]):
+                        text_html += ' (' + bot.memory.get_by_path(['user_data', u.id_.chat_id, "nickname"]) + ')'
+                    text_html += '<br />'
 
-            bot.send_message_parsed(conv_1on1_initiator, text_html)
+                bot.send_message_parsed(conv_1on1_initiator, text_html)
 
         logging.info(_("@{} not sent due to multiple recipients").format(username_lower))
         return #SHORT-CIRCUIT

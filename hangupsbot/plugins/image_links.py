@@ -4,7 +4,6 @@ Identify images, upload them to google plus, post in hangouts
 
 import asyncio
 import aiohttp
-import asyncio
 import os
 import io
 import re
@@ -29,7 +28,7 @@ def _watch_image_link(bot, event, command):
     if re.match("^(https?://)?([a-z0-9.]*?\.)?imgur.com/", event_text_lower, re.IGNORECASE):
         """imgur links can be supplied with/without protocol and extension"""
         probable_image_link = True
-    elif event_text_lower.startswith(("http://", "https://")) and event_text_lower.endswith((".png", ".gif", ".gifv", ".jpg")):
+    elif event_text_lower.startswith(("http://", "https://")) and event_text_lower.endswith((".png", ".gif", ".gifv", ".jpg", ".jpeg")):
         """other image links must have protocol and end with valid extension"""
         probable_image_link = True
     if probable_image_link and "googleusercontent" in event_text_lower:
