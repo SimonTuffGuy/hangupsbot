@@ -49,6 +49,8 @@ def meme(bot, event, *args):
             image_data = io.BytesIO(raw)
             
             filename = os.path.basename(instance_link)
+            if not filename.endswith((".jpg", ".gif", "gifv", "png")):
+                filename = filename + ".gif"
 
             legacy_segments = [hangups.ChatMessageSegment(instance_link, hangups.SegmentType.LINK, link_target=instance_link)]
 
