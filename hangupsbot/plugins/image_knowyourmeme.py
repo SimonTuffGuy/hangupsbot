@@ -41,7 +41,7 @@ def meme(bot, event, *args):
 
         if len(links) > 0:
             chosen_link_tag = random.choice(links)
-            instance_link = chosen_link_tag.get("src")
+            instance_link = chosen_link_tag.get("data-src")
 
             print("fetching link {}".format(instance_link))
             r = yield from aiohttp.request('GET', instance_link)
