@@ -7,16 +7,16 @@ import aiohttp
 import hangups
 import urllib.request
 import io
+import plugins
 
 _externals = { "running": False }
 
 
 def _initialise(Handlers, bot=None):
-    Handlers.register_user_command(["meme"])
+    plugins.register_user_command(["meme"])
+    #Handlers.register_user_command(["meme"])
     return []
 
-
-@asyncio.coroutine
 def _retrieve(url):
     print("meme._retrieve(): getting {}".format(url))
     response = yield from aiohttp.request('GET', url)

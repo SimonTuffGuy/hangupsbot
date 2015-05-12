@@ -2,8 +2,12 @@ import asyncio
 
 from random import randint
 
-def _initialise(command):
-    command.register_handler(_handle_me_action)
+import plugins
+
+
+def _initialise(bot):
+    plugins.register_handler(_handle_me_action)
+    plugins.register_user_command(["diceroll", "d12roll", "d20roll", "coinflip"])
 
 
 @asyncio.coroutine
