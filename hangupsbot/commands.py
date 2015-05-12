@@ -7,6 +7,7 @@ from version import __version__
 from utils import text_to_segments
 
 import plugins
+import plugins.cleverbot
 
 
 class CommandDispatcher(object):
@@ -149,6 +150,7 @@ def version(bot, event, *args):
 
 @command.register_unknown
 def unknown_command(bot, event, *args):
-    """handle unknown commands"""
-    bot.send_message(event.conv,
-                     _('{}: unknown command').format(event.user.full_name))
+    plugins.cleverbot.chat(bot, event, *args)
+#    """handle unknown commands"""
+#    bot.send_message(event.conv,
+#                     _('{}: unknown command').format(event.user.full_name))
