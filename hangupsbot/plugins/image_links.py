@@ -27,6 +27,9 @@ def _watch_image_link(bot, event, command):
     event_text_lower = event.text.lower()
     if re.match("^(https?://)?([a-z0-9.]*?\.)?imgur.com/", event_text_lower, re.IGNORECASE):
         """imgur links can be supplied with/without protocol and extension"""
+        if "gallery" in event_text_lower:
+            print("_watch_image_link(): rejected link {}".format(event.text))
+            return
         probable_image_link = True
     elif event_text_lower.startswith(("http://", "https://")) and event_text_lower.endswith((".png", ".gif", ".gifv", ".jpg", ".jpeg")):
         """other image links must have protocol and end with valid extension"""
