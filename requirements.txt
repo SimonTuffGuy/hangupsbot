@@ -10,3 +10,4 @@ wolframalpha
 pyslack
 selenium
 datetime
+python-dateutil
