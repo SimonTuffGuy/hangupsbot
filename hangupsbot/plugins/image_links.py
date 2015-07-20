@@ -31,7 +31,7 @@ def _watch_image_link(bot, event, command):
             print("_watch_image_link(): rejected link {}".format(event.text))
             return
         probable_image_link = True
-    elif event_text_lower.startswith(("http://", "https://")) and event_text_lower.endswith((".png", ".gif", ".gifv", ".jpg", ".jpeg")):
+    elif event_text_lower.startswith(("http://", "https://")) and event_text_lower.endswith((".png", ".gif", ".jpg", ".jpeg")):
         """other image links must have protocol and end with valid extension"""
         probable_image_link = True
     if probable_image_link and "googleusercontent" in event_text_lower:
@@ -44,7 +44,7 @@ def _watch_image_link(bot, event, command):
 
         if "imgur.com" in link_image:
             """special imgur link handling"""
-            if not link_image.endswith((".jpg", ".gif", "gifv", "png")):
+            if not link_image.endswith((".jpg", ".gif", "png")):
                 link_image = link_image + ".gif"
             link_image = "https://i.imgur.com/" + os.path.basename(link_image)
 
