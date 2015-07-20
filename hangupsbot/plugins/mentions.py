@@ -185,8 +185,8 @@ def mention(bot, event, *args):
 
         if username_lower == "all" or \
                 partial_name_match == True or \
-				username_lower == u.full_name.replace(" ", "").lower() or \
-				username_lower == u.full_name.replace(" ", "_").lower() or \
+                username_lower == u.full_name.replace(" ", "").lower() or \
+                username_lower == u.full_name.replace(" ", "_").lower() or \
                 username_lower == nickname_lower:
 
             logging.info(_("user {} ({}) is present").format(u.full_name, u.id_.chat_id))
@@ -266,10 +266,7 @@ def mention(bot, event, *args):
 
             if alert_via_1on1:
                 """send alert with 1on1 conversation"""
-                if "get_1to1" in dir(bot):
-                    conv_1on1 = yield from bot.get_1to1(u.id_.chat_id)
-                else:
-                    conv_1on1 = bot.get_1on1_conversation(u.id_.chat_id)
+                conv_1on1 = bot.get_1on1_conversation(u.id_.chat_id)
                 if conv_1on1:
                     bot.send_message_parsed(
                         conv_1on1,
