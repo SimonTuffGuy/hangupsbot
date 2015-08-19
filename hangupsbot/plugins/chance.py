@@ -26,7 +26,7 @@ def _handle_me_action(bot, event, command):
 
 def diceroll(bot, event, *args):
     """roll a dice"""
-    bot.send_message_parsed(event.conv, _("<i>{} rolled <b>{}</b></i>").format(event.user.full_name, randint(1,6)))
+    yield from bot.coro_send_message(event.conv, _("<i>{} rolled <b>{}</b></i>").format(event.user.full_name, randint(1,6)))
 
 def d12roll(bot, event, *args):
     bot.send_message_parsed(event.conv, "<i>{} rolled <b>{}</b></i>".format(event.user.full_name, randint(1,12)))
@@ -37,6 +37,6 @@ def d20roll(bot, event, *args):
 def coinflip(bot, event, *args):
     """flip a coin"""
     if randint(1,2) == 1:
-        bot.send_message_parsed(event.conv, _("<i>{}, coin turned up <b>heads</b></i>").format(event.user.full_name))
+        yield from bot.coro_send_message(event.conv, _("<i>{}, coin turned up <b>heads</b></i>").format(event.user.full_name))
     else:
-        bot.send_message_parsed(event.conv, _("<i>{}, coin turned up <b>tails</b></i>").format(event.user.full_name))
+        yield from bot.coro_send_message(event.conv, _("<i>{}, coin turned up <b>tails</b></i>").format(event.user.full_name))
