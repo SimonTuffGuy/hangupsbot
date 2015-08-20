@@ -184,6 +184,7 @@ def mention(bot, event, *args):
     exact_fragment_matches = []
     mention_list = []
     for u in users_in_chat:
+        name_tokens = u.full_name.lower().split(" ")
 
         # mentions also checks nicknames if one is configured
         #  exact matches only! see following IF block
@@ -195,16 +196,16 @@ def mention(bot, event, *args):
 
         _normalised_full_name_upper = remove_accents(u.full_name.upper())
 
-        if (username_lower == "all" or
+        partial_name_match = False
+        for name_token in name_tokens:
+            if username_lower == name_token:
+                partial_name_match = True
 
-                username_lower in u.full_name.replace(" ", "").lower() or
-                    username_upper in _normalised_full_name_upper.replace(" ", "") or
-
-                username_lower in u.full_name.replace(" ", "_").lower() or
-                    username_upper in _normalised_full_name_upper.replace(" ", "_") or
-
-                username_lower == nickname_lower or
-                username in u.full_name.split(" ")):
+        if username_lower == "all" or \
+            partial_name_match == True or \
+            username_lower == u.full_name.replace(" ", "").lower() or \
+            username_lower == u.full_name.replace(" ", "_").lower() or \
+            username_lower == nickname_lower:
 
             logger.info("user {} ({}) is present".format(u.full_name, u.id_.chat_id))
 
@@ -261,7 +262,7 @@ def mention(bot, event, *args):
 
     if len(mention_list) > 1 and username_lower != "all":
 
-        send_multiple_user_message = bot.get_config_suboption(event.conv_id, 'mentionerrors_user')
+        send_multiple_user_message = True
 
         if bot.memory.exists(['user_data', event.user.id_.chat_id, "mentionmultipleusermessage"]):
             send_multiple_user_message = bot.memory.get_by_path(['user_data', event.user.id_.chat_id, "mentionmultipleusermessage"])
